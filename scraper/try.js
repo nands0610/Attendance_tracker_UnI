@@ -1,10 +1,25 @@
 import axios from "axios";
 import dotenv from "dotenv";
+import { supabase } from "./supabaseClient.js";
 
 dotenv.config();
 
 const COOKIE = process.env.COOKIE;
 const API_URL = process.env.API_URL;
+
+async function uploadToDB(data) {
+  const { error } = await supabase
+    .from("attendance_records")
+    .upsert(data, {
+      onConflict: "date,lc_leader_name,attendance_type"
+    });
+
+  if (error) {
+    console.log("Error inserting:", error);
+  } else {
+    console.log("Successfully inserted!");
+  }
+}
 
 async function fetchData() {
   try {
@@ -39,9 +54,12 @@ async function fetchData() {
       },
     });
 
-    function extractDate(record) {
-      const raw = record.fields["Walkthrough ID"];  // e.g. "Name - BLM, 12/10/25"
-      const datePart = raw.split(",")[1].trim();    // "12/10/25"
+    function extractDate(y) {
+      console.log('1');
+      const raw = y.fields["Walkthrough ID"];  // e.g. "Name - BLM, 12/10/25"
+      console.log('2');
+      const datePart = raw.split(",")[1].trim();
+      console.log(datePart);   // "12/10/25"
 
       const [day, month, year] = datePart.split("/");
       const fullYear = "20" + year;
@@ -49,26 +67,33 @@ async function fetchData() {
       return `${fullYear}-${month}-${day}`;
     }
 
-    const finalData = records.map(record => ({
-      date: extractDate(record),
-      lc_leader_name: record.fields["LC Leader Name"],
-      attendance_type: record.fields["Attendance Type"],
-      duration: record.fields["Duration"]
-    }));
+    
 
     console.log("Status:", response.status);
     console.log("Data:", response.data);
 
     const records = response.data.records;
 
-    console.log(finalData)
+    const finalData = records.map(record => ({
+      date: extractDate(record),
+      lc_leader_name: record.fields["LC Leader Name"].split('-')[0].trim(),
+      attendance_type: record.fields["Attendance Type"],
+      duration: record.fields["Duration"]
+    }));
+
+    console.log(finalData);
+
+    await uploadToDB(finalData);
 
     // records.forEach((record, index) => {
     //   console.log(`Record ${index + 1}:`, record.fields);
+    //   // const x = record;
     // });
 
+    // extractDate(x);
+
     // records.forEach((record, index) => {
-    //   console.log(`Record ${index + 1}:`, record.fields["Duration"]);
+    //   console.log(`Record ${index + 1}:`, record.fields["Walkthrough ID"]);
     // });
 
 
