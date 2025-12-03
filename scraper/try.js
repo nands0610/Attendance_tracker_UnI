@@ -55,22 +55,14 @@ async function fetchData() {
     });
 
     function extractDate(y) {
-      console.log('1');
       const raw = y.fields["Walkthrough ID"];  // e.g. "Name - BLM, 12/10/25"
-      console.log('2');
-      const datePart = raw.split(",")[1].trim();
-      console.log(datePart);   // "12/10/25"
+      const datePart = raw.split(",")[1].trim();   // "12/10/25"
 
       const [day, month, year] = datePart.split("/");
       const fullYear = "20" + year;
 
       return `${fullYear}-${month}-${day}`;
     }
-
-    
-
-    console.log("Status:", response.status);
-    console.log("Data:", response.data);
 
     const records = response.data.records;
 
@@ -81,21 +73,7 @@ async function fetchData() {
       duration: record.fields["Duration"]
     }));
 
-    console.log(finalData);
-
     await uploadToDB(finalData);
-
-    // records.forEach((record, index) => {
-    //   console.log(`Record ${index + 1}:`, record.fields);
-    //   // const x = record;
-    // });
-
-    // extractDate(x);
-
-    // records.forEach((record, index) => {
-    //   console.log(`Record ${index + 1}:`, record.fields["Walkthrough ID"]);
-    // });
-
 
   } catch (error) {
     console.log("Error occurred!");
